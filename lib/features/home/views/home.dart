@@ -32,7 +32,13 @@ class _HomeState extends State<Home> {
           title: const Text("Products"),
           centerTitle: true,
         ),
-        body: BlocBuilder<ProductCubit, ProductState>(
+        body: BlocConsumer<ProductCubit, ProductState>(
+          listener: (BuildContext context, state) {
+            if(state is ProductLoaded){
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Success")));
+
+            }
+          },
           builder: (context, state) {
             if (state is ProductLoaded) {
               final list = state.products;
