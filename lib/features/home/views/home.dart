@@ -34,13 +34,13 @@ class _HomeState extends State<Home> {
         ),
         body: BlocConsumer<ProductCubit, ProductState>(
           listener: (BuildContext context, state) {
-            if(state is ProductLoaded){
+            if(state is ProductSuccess){
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Success")));
 
             }
           },
           builder: (context, state) {
-            if (state is ProductLoaded) {
+            if (state is ProductSuccess) {
               final list = state.products;
               return Padding(
                 padding: const EdgeInsets.all(8.0),

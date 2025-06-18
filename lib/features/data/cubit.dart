@@ -8,16 +8,16 @@ abstract class ProductState {}
 
 class ProductInitial extends ProductState {}
 
-class ProductLoaded extends ProductState {
+class ProductSuccess extends ProductState {
   final List<ProductModel> products;
 
-  ProductLoaded(this.products);
+  ProductSuccess(this.products);
 }
 
 class ProductCubit extends Cubit<ProductState> {
   ProductCubit() : super(ProductInitial()) ;
 
   void loadProducts() {
-    emit(ProductLoaded(ProductModel.list));
+    emit(ProductSuccess(ProductModel.list));
   }
 }
