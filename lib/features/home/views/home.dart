@@ -1,66 +1,132 @@
-import 'package:card/features/home/widgets/product_card.dart';
-import 'package:card/features/models/product_model.dart';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 
-import '../../data/cubit.dart';
+class Home extends StatelessWidget {
+  Home({super.key});
 
-class Home extends StatefulWidget {
-  const Home({super.key});
+  final Dio dio = Dio();
 
-  @override
-  State<Home> createState() => _HomeState();
-}
-
-class _HomeState extends State<Home> {
-  late ProductCubit cubit;
-
-  @override
-  void initState() {
-    super.initState();
-    cubit = ProductCubit();
-    cubit.loadProducts();
+  Future<List<dynamic>> getData() async {
+    final response = await dio.get("https://fakestoreapi.com/products/category/jewelery");
+    return response.data;
   }
-
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => cubit,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text("Products"),
-          centerTitle: true,
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F8F8),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          "Jewelry Collection",
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        body: BlocConsumer<ProductCubit, ProductState>(
-          listener: (BuildContext context, state) {
-            if(state is ProductSuccess){
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Success")));
-
-            }
-          },
-          builder: (context, state) {
-            if (state is ProductSuccess) {
-              final list = state.products;
-              return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: GridView.builder(
-                  itemCount: list.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 0.70,
-                  ),
-                  itemBuilder: (_, index) =>
-                      ProductCard(productModel: list[index]),
+      ),
+      body: FutureBuilder<List<dynamic>>(
+        future: getData(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.amber),
+            );
+          } else if (snapshot.hasError) {
+            return const Center(child: Text("Failed to load data"));
+          } else {
+            final products = snapshot.data!;
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: GridView.builder(
+                itemCount: products.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 20,
+                  crossAxisSpacing: 20,
+                  childAspectRatio: 0.65,
                 ),
-              );
-            } else {
-              return const Center(child: CircularProgressIndicator());
-            }
-          },
-        ),
+                itemBuilder: (context, index) {
+                  final product = products[index];
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 6,
+                          offset: Offset(0, 4),
+                        )
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                          child: Image.network(
+                            product["image"],
+                            height: 140,
+                            width: double.infinity,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                product["title"],
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                "\$${product["price"]}",
+                                style: const TextStyle(
+                                  color: Colors.amber,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Icon(Icons.star, color: Colors.amber, size: 16),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    "${product["rating"]["rate"]}",
+                                    style: const TextStyle(fontSize: 13),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    "${product["rating"]["count"]} reviews",
+                                    style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            );
+          }
+        },
       ),
     );
   }
